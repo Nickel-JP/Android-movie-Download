@@ -30,7 +30,7 @@ void main() {
     await tester.tap(find.text('詳細設定'));
     await tester.pumpAndSettle();
     expect(
-      find.text('GitHub：Nickel-JP/Android-movie-Download'),
+      find.text('https://github.com/Nickel-JP/Android-movie-Download'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

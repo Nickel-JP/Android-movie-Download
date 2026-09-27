@@ -49,6 +49,8 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 
 更新配信先は `Nickel-JP/Android-movie-Download` です。yt-dlpだけの更新にはアプリ本体の再インストールは不要です。
 
+「詳細設定」では更新配信先をGitHubのURLで表示し、選択してコピーできます。変更画面もURLで入力できます。
+
 ## 開発・ビルド
 
 ```powershell
@@ -63,7 +65,7 @@ flutter build apk --debug --target-platform android-x64
 署名済み配布版の作成：
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 1.0.4 -BuildNumber 5
+.\scripts\Build-Release.ps1 -Version 1.0.5 -BuildNumber 6
 ```
 
 `dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。
@@ -71,7 +73,7 @@ flutter build apk --debug --target-platform android-x64
 次のバージョンでは `Version` と `BuildNumber` を増やし、同じ署名設定でビルドしてください。`docs/release-notes/v<Version>.md` に変更内容、互換性、検証結果を記載し、APKと更新情報を同じGitHub Releaseに添付します。
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 1.0.4
+.\scripts\Publish-Release.ps1 -Version 1.0.5
 ```
 
 更新情報のバージョン・容量・ハッシュは実際のAPKと照合します。APKの署名・パッケージ名・バージョンはインストール前にも確認します。

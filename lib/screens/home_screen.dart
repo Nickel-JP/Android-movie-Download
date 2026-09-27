@@ -1047,8 +1047,8 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                'GitHub：${controller.repository}',
+              child: SelectableText(
+                'https://github.com/${controller.repository}',
                 style: TextStyle(fontSize: 12, color: _muted),
               ),
             ),
@@ -1153,14 +1153,19 @@ class _HomeScreenState extends State<HomeScreen>
   );
 
   Future<void> _repositoryDialog() async {
-    final input = TextEditingController(text: controller.repository);
+    final input = TextEditingController(
+      text: 'https://github.com/${controller.repository}',
+    );
     final value = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('GitHub更新配信先'),
         content: TextField(
           controller: input,
-          decoration: const InputDecoration(hintText: 'owner/repository'),
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(
+            hintText: 'https://github.com/owner/repository',
+          ),
         ),
         actions: [
           TextButton(
