@@ -50,7 +50,9 @@ class NativeEngine private constructor(private val context: Application) {
             height = maxOf(height, if (w > 0 && h > 0) minOf(w, h) else h)
             fps = maxOf(fps, f.optDouble("fps", 0.0))
         }
-        mapOf("title" to info.optString("title"), "quality" to "配信上限：${height}p / ${fps.toInt()}fps")
+        val quality = if (height > 0) "配信上限：${height}p" + if (fps > 0) " / ${fps.toInt()}fps" else ""
+            else "画質情報は保存後に確認します"
+        mapOf("title" to info.optString("title"), "quality" to quality)
     }
     fun cancel(id: String) {
         val token = tokens[id] ?: return
@@ -105,6 +107,10 @@ class NativeEngine private constructor(private val context: Application) {
             val file = outputFile ?: error("保存対象のファイルが見つかりません。")
             require(file.canonicalPath.startsWith(job.canonicalPath + File.separator) && file.isFile && file.length() > 0) {
                 "出力ファイルを確認できません。"
+            }
+            if (mode == "video" && DownloadPolicy.needsVideoProbe(info, format)) {
+                report(mapOf("status" to "processing", "message" to "映像の画質・fpsを確認中"))
+                VideoProbe.verify(runtime, file, task.getInt("height"), task.getInt("fps"), token)
             }
             report(mapOf("status" to "saving", "message" to "ダウンロードフォルダーへ保存中"))
             val uri = publish(file, token)

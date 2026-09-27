@@ -57,14 +57,17 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(DownloadApp(controller: controller));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'https://youtu.be/example');
+    await tester.enterText(
+      find.byType(TextField),
+      'http://example.org:8080/audio.mp3?token=abc',
+    );
     await tester.tap(find.text('MP3'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('startDownload')));
     await tester.pumpAndSettle();
     expect(request?['mode'], 'mp3');
     expect(request?['bitrate'], 320);
-    expect(request?['url'], 'https://youtu.be/example');
+    expect(request?['url'], 'http://example.org:8080/audio.mp3?token=abc');
     expect(find.text('ダウンロード履歴'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

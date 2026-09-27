@@ -76,6 +76,19 @@ class NativeRuntime(private val context: Context) {
             "--js-runtimes", "quickjs:${File(nativeDir, "libqjs.so").absolutePath}",
             "--ffmpeg-location", File(nativeDir, "libffmpeg.so").absolutePath)
         command.addAll(args)
+        return run(command, token, onLine)
+    }
+
+    fun executeFfmpeg(args: List<String>, token: CancelToken = CancelToken()): String {
+        val command = mutableListOf("/system/bin/sh", "-c",
+            "echo __ANDROID_MOVIE_PID__\$\$; exec \"\$@\"", "ffmpeg-runner",
+            File(nativeDir, "libffmpeg.so").absolutePath)
+        command.addAll(args)
+        return run(command, token) {}
+    }
+
+    private fun run(command: List<String>, token: CancelToken, onLine: (String) -> Unit): String {
+        token.check()
         val builder = ProcessBuilder(command).redirectErrorStream(true)
         builder.environment().apply {
             put("LD_LIBRARY_PATH", "${pythonHome.absolutePath}/lib:${File(base, "packages/ffmpeg/usr/lib").absolutePath}")

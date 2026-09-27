@@ -1,10 +1,11 @@
 # Android movie Download
 
-Flutterで作成した、YouTube・ニコニコ動画のAndroid向けダウンローダーです。
+Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するAndroid向けダウンローダーです。
 
 ## 機能
 
 - URL入力・Android共有メニューからの取り込み
+- サイトを限定せず、HTTP／HTTPSのURLをyt-dlpで解析。直接の動画・音声URLにも対応
 - 配信品質の範囲内で、最大4K／60fpsの動画をMP4またはMKVで保存
 - MP3は128／192／256／320kbps、WAVは非圧縮PCMで保存
 - 進捗通知、バックグラウンド処理、キャンセル、再試行、履歴
@@ -27,13 +28,15 @@ Flutterで作成した、YouTube・ニコニコ動画のAndroid向けダウン�
 - プロジェクト：`D:\Codex\ytdlp_flutter`
 - 開発ツール：`D:\Tools\YtDlpFlutter`
 
-現在配信中のライブ動画は対象外です。サイトのアクセス制限・ログイン状態・仕様変更によって取得できない場合は、エラーを表示します。
+対応サイトはアプリ内のyt-dlpの版に従います。[yt-dlpの対応サイト](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) を参照してください。取得可否はサイト側のアクセス制限・ログイン状態・仕様変更にも依存します。Cookieはサイトを限定せず取り込めます。
+
+現在配信中のライブ動画と、複数件をまとめて処理するプレイリストは対象外です。単体の動画・音声URLを指定してください。認証情報を直接埋め込んだURLや、HTTP／HTTPS以外のスキームは受け付けません。
 
 ## インストールと更新
 
 初回はGitHub Releasesのarm64版APKを端末にダウンロードし、Androidの確認画面からインストールします。
 
-以降はアプリの「設定・更新」→「アップデートを確認」から更新できます。変更内容の確認後に更新ファイルを取得し、検証後にAndroidのインストール確認画面を開きます。初回の更新時は、このアプリからのインストール許可が必要です。同じ署名の新しいバージョンで上書きするため、設定と履歴は保持されます。
+以降はアプリの「設定」→「アップデートを確認」から更新できます。変更内容の確認後に更新ファイルを取得し、検証後にAndroidのインストール確認画面を開きます。初回の更新時は、このアプリからのインストール許可が必要です。同じ署名の新しいバージョンで上書きするため、設定と履歴は保持されます。
 
 更新配信先は `Nickel-JP/Android-movie-Download` です。yt-dlpだけの更新にはアプリ本体の再インストールは不要です。
 
@@ -51,7 +54,7 @@ flutter build apk --debug --target-platform android-x64
 署名済み配布版の作成：
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 1.0.0 -BuildNumber 1
+.\scripts\Build-Release.ps1 -Version 1.0.1 -BuildNumber 2
 ```
 
 `dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。

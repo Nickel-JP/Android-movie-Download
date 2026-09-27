@@ -350,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
     ),
     const SizedBox(height: 6),
-    Text('YouTube・ニコニコ動画', style: TextStyle(color: _muted, fontSize: 13)),
+    Text('yt-dlp対応サイトの動画・音声', style: TextStyle(color: _muted, fontSize: 13)),
     const SizedBox(height: 24),
     Row(
       children: [
@@ -377,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       autocorrect: false,
       enableSuggestions: false,
       decoration: InputDecoration(
-        hintText: 'https://youtu.be/…',
+        hintText: '動画・音声のURLを入力',
         suffixIcon: _url.text.isEmpty
             ? null
             : IconButton(

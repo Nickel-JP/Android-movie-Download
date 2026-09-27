@@ -31,27 +31,24 @@ class DownloadOptions {
 }
 
 String normalizeVideoUrl(String text) {
-  final match = RegExp(r'https?://[^\s<>]+').firstMatch(text.trim());
-  final value = (match?.group(0) ?? text.trim()).replaceFirst(
-    RegExp(r'[)\]。、]+$'),
-    '',
-  );
+  final trimmed = text.trim();
+  final match = RegExp(
+    r'https?://[^\s<>]+',
+    caseSensitive: false,
+  ).firstMatch(trimmed);
+  final value = RegExp(r'^https?://', caseSensitive: false).hasMatch(trimmed)
+      ? trimmed
+      : (match?.group(0) ?? trimmed).replaceFirst(RegExp(r'[)\]。、]+$'), '');
   final uri = Uri.tryParse(value);
   if (uri == null ||
       !['http', 'https'].contains(uri.scheme) ||
+      uri.host.isEmpty ||
       uri.userInfo.isNotEmpty ||
-      (uri.hasPort && uri.port != 443 && uri.port != 80)) {
-    throw const FormatException('YouTubeまたはニコニコ動画のURLを入力してください。');
+      (uri.hasPort && (uri.port < 1 || uri.port > 65535))) {
+    throw const FormatException('HTTPまたはHTTPSのメディアURLを入力してください。');
   }
-  const roots = ['youtube.com', 'youtu.be', 'nicovideo.jp', 'nico.ms'];
-  if (!roots.any(
-    (root) =>
-        uri.host.toLowerCase() == root ||
-        uri.host.toLowerCase().endsWith('.$root'),
-  )) {
-    throw const FormatException('対応サイトはYouTubeとニコニコ動画です。');
-  }
-  return uri.replace(scheme: 'https', port: 443).removeFragment().toString();
+  // スキーム・ポート・クエリ・フラグメントは、サイト側が必要とする可能性があるため保持する。
+  return uri.toString();
 }
 
 class DownloadTask {

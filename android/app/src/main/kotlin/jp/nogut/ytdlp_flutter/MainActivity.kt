@@ -224,18 +224,7 @@ class MainActivity : FlutterActivity() {
                     }
                     output.toString("UTF-8")
                 } ?: error("Cookieファイルを開けません。")
-                require(content.startsWith("# Netscape HTTP Cookie File") || content.startsWith("# HTTP Cookie File")) { "Netscape形式のCookieファイルを選択してください。" }
-                val allowed = content.lineSequence().filter { line ->
-                    if (line.isBlank() || (line.startsWith("#") && !line.startsWith("#HttpOnly_"))) false
-                    else {
-                        val columns = line.removePrefix("#HttpOnly_").split('\t')
-                        val domain = columns.firstOrNull()?.trimStart('.') ?: ""
-                        columns.size == 7 && listOf("youtube.com", "google.com", "nicovideo.jp").any {
-                            domain == it || domain.endsWith(".$it")
-                        }
-                    }
-                }.toList()
-                require(allowed.isNotEmpty()) { "対応サイトのCookieが含まれていません。" }
+                val allowed = CookiePolicy.parse(content)
                 val temporary = File(engine.cookieFile.parentFile, "cookies.tmp")
                 temporary.writeText("# Netscape HTTP Cookie File\n" + allowed.joinToString("\n") + "\n")
                 require(temporary.renameTo(engine.cookieFile)) { "Cookieファイルを保存できません。" }
