@@ -15,6 +15,7 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 - Netscape形式のCookieファイル取り込み
 - アプリ内からyt-dlpを更新
 - GitHub Releasesからアプリ更新を確認し、Androidのインストール確認画面を開く
+- 更新内容の見出し・箇条書き表示、スクロール中も操作できる更新ボタン
 
 4K／60fpsは元動画の配信品質が上限です。MP3 320kbpsやWAVへの変換で元音源以上の音質にはなりません。動画形式は再圧縮せずに変更するため、再生には保存されたコーデックに対応するプレーヤーが必要です。
 
@@ -39,6 +40,8 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 
 以降はアプリの「設定」→「アップデートを確認」から更新できます。変更内容の確認後に更新ファイルを取得し、検証後にAndroidのインストール確認画面を開きます。初回の更新時は、このアプリからのインストール許可が必要です。同じ署名の新しいバージョンで上書きするため、設定と履歴は保持されます。
 
+更新画面の表示例：[ライト](docs/images/update-light.png) / [ダーク](docs/images/update-dark.png)。1.0.3より前のアプリから更新する際は、旧版のレイアウトで記号を除いた更新内容を表示します。
+
 更新配信先は `Nickel-JP/Android-movie-Download` です。yt-dlpだけの更新にはアプリ本体の再インストールは不要です。
 
 ## 開発・ビルド
@@ -55,7 +58,7 @@ flutter build apk --debug --target-platform android-x64
 署名済み配布版の作成：
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 1.0.2 -BuildNumber 3
+.\scripts\Build-Release.ps1 -Version 1.0.3 -BuildNumber 4
 ```
 
 `dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。
@@ -63,7 +66,7 @@ flutter build apk --debug --target-platform android-x64
 次のバージョンでは `Version` と `BuildNumber` を増やし、同じ署名設定でビルドしてください。`docs/release-notes/v<Version>.md` に変更内容、互換性、検証結果を記載し、APKと更新情報を同じGitHub Releaseに添付します。
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 1.0.2
+.\scripts\Publish-Release.ps1 -Version 1.0.3
 ```
 
 更新情報のバージョン・容量・ハッシュは実際のAPKと照合します。APKの署名・パッケージ名・バージョンはインストール前にも確認します。

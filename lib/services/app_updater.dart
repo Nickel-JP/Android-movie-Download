@@ -56,7 +56,10 @@ class AppRelease {
       apkUrl: url,
       sha256sum: hash.toLowerCase(),
       size: size,
-      notes: json['notes'] as String? ?? '',
+      // 旧版用の本文を残した配信情報でも、整形用の更新内容を優先する。
+      notes: json['notesMarkdown'] is String
+          ? json['notesMarkdown'] as String
+          : json['notes'] as String? ?? '',
     );
   }
 }

@@ -5,6 +5,7 @@ import '../models/media_list.dart';
 import '../services/app_controller.dart';
 import '../services/app_updater.dart';
 import 'playlist_screen.dart';
+import 'update_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.controller});
@@ -175,25 +176,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
       final approved = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('バージョン ${release.version} に更新'),
-          content: SingleChildScrollView(
-            child: Text(
-              '${release.notes}\n\n'
-              '容量 ${(release.size / 1024 / 1024).toStringAsFixed(1)} MB\n'
-              'ダウンロード後、Androidのインストール確認画面が開きます。設定と履歴は引き継がれます。',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('後で'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('更新する'),
-            ),
-          ],
+        builder: (context) => UpdateDialog(
+          release: release,
+          currentVersion: controller.appVersion,
         ),
       );
       if (approved != true || !mounted) return;

@@ -17,6 +17,11 @@ if ([string]::IsNullOrWhiteSpace($NotesFile)) {
     $NotesFile = Join-Path $PSScriptRoot "..\docs\release-notes\v$Version.md"
 }
 $taskNotes = if (Test-Path -LiteralPath $NotesFile) { Get-Content -LiteralPath $NotesFile -Raw } else { "バージョン $Version の更新です。" }
+# 旧版の文字列表示にも読みやすい本文を配信し、新版には元の書式を渡す。
+$taskPlainNotes = $taskNotes -replace '\A\s*# Android movie Download[^\r\n]*\r?\n\s*', ''
+$taskPlainNotes = $taskPlainNotes -replace '(?m)^#{1,6}\s+', '' -replace '(?m)^\s*[-*+]\s+', '• '
+$taskPlainNotes = $taskPlainNotes -replace '\*\*([^*\r\n]+)\*\*', '$1' -replace '`([^`\r\n]+)`', '$1'
+$taskPlainNotes = $taskPlainNotes -replace '\[([^\]]+)\]\(([^)\r\n]+)\)', '$1（$2）'
 $taskManifest = [ordered]@{
     schemaVersion = 1
     packageName = 'jp.nogut.ytdlp_flutter'
@@ -25,7 +30,8 @@ $taskManifest = [ordered]@{
     apkUrl = "https://github.com/$Repository/releases/download/v$Version/$([Uri]::EscapeDataString($taskFile.Name))"
     size = $taskFile.Length
     sha256 = (Get-FileHash -LiteralPath $taskFile.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-    notes = $taskNotes.Trim()
+    notes = $taskPlainNotes.Trim()
+    notesMarkdown = $taskNotes.Trim()
 }
 $taskOutput = Join-Path $taskFile.DirectoryName 'update.json'
 $taskManifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $taskOutput -Encoding utf8

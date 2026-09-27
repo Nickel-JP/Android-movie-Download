@@ -21,6 +21,22 @@ void main() {
     'apkUrl': 'https://github.com/owner/app/releases/download/v1.1.0/app.apk',
     'notes': '更新内容',
   };
+  test('整形用の更新内容を優先し、旧形式の更新情報も読める', () {
+    final rich = AppRelease.parse(
+      {...manifest(), 'notesMarkdown': '## 更新内容\n\n- 表示を改善'},
+      repository,
+      'v1.1.0',
+    );
+    expect(rich.notes, '## 更新内容\n\n- 表示を改善');
+    final legacy = AppRelease.parse(manifest(), repository, 'v1.1.0');
+    expect(legacy.notes, '更新内容');
+    final invalidOptional = AppRelease.parse(
+      {...manifest(), 'notesMarkdown': 123},
+      repository,
+      'v1.1.0',
+    );
+    expect(invalidOptional.notes, '更新内容');
+  });
   test('別アプリ・配信元・検証情報が不正な更新を拒否する', () {
     for (final change in [
       {'packageName': 'other.application'},

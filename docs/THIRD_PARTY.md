@@ -10,6 +10,7 @@
 | Termux packages | ネイティブ実行環境のビルド元 | https://github.com/termux/termux-packages |
 | libwebp 1.6.0 | Android 15のネイティブ互換性への対応 | https://github.com/webmproject/libwebp/tree/4fa21912338357f89e4fd51cf2368325b59e9bd9 |
 | http・crypto・shared_preferences | 通信、更新検証、設定保存 | https://pub.dev/ |
+| flutter_markdown_plus 1.0.12・markdown 7.3.1 | 更新内容の見出し・箇条書き・強調表示 | https://github.com/foresightmobile/flutter_markdown_plus |
 
 バージョンは`pubspec.lock`とAndroidのGradle設定で固定しています。youtubedl-android 0.18.1は上流でプレリリースとして扱われているため、このアプリの検証結果を基準に採用しています。
 
