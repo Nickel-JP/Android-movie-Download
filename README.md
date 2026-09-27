@@ -2,6 +2,21 @@
 
 Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するAndroid向けダウンローダーです。
 
+**[最新版のAndroid APKをダウンロード](https://github.com/Nickel-JP/Android-movie-Download/releases/latest)**
+
+GitHubアカウントへの登録・ログインや、開発環境の用意は不要です。対応するAndroid端末に公開APKをインストールして使えます。
+
+## はじめて使う方へ
+
+1. [配布ページ](https://github.com/Nickel-JP/Android-movie-Download/releases/latest)の「Assets」から、名前が`.apk`で終わるファイルをダウンロードします。
+2. ダウンロードしたAPKを開き、Androidの確認画面からインストールします。確認画面が表示された場合は、ダウンロードに使用したアプリからのインストールを許可します。
+3. アプリで動画・音声のURLを貼り付け、保存形式と品質を選んで「ダウンロードを開始」を押します。
+4. 次回からは「設定」→「アップデートを確認」で新しい版をインストールできます。
+
+対応環境は**Android 10以降・arm64端末**です。`update.json`はアプリ内更新用なので、手動でインストールする必要はありません。
+
+画面例：[ライト表示](docs/images/light.png) / [ダーク表示](docs/images/dark.png)。不具合の報告は[GitHub Issues](https://github.com/Nickel-JP/Android-movie-Download/issues)へお願いします。
+
 ## 機能
 
 - URL入力・Android共有先からの取り込みと「ダウンロードしますか？」の確認
@@ -22,14 +37,9 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 
 ## 対応環境
 
-画面例：[ライト表示](docs/images/light.png) / [ダーク表示](docs/images/dark.png)。UI設計は [設計記録](docs/DESIGN.md) を参照してください。
+UI設計は [設計記録](docs/DESIGN.md) を参照してください。
 
 - Android 10以降、arm64端末向けの配布APK
-- ユーザー指定端末：A301SH・Android 15（実機は未接続）
-- Flutter 3.47.5／Dart 3.13.4、Java 17、Android SDK 36
-- 配布ビルドにはNDK 28.2.13676358・CMake 3.22.1・Pythonも使用
-- プロジェクト：`D:\Codex\ytdlp_flutter`
-- 開発ツール：`D:\Tools\YtDlpFlutter`
 
 対応サイトはアプリ内のyt-dlpの版に従います。[yt-dlpの対応サイト](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) を参照してください。取得可否はサイト側のアクセス制限・ログイン状態・仕様変更にも依存します。Cookieはサイトを限定せず取り込めます。
 
@@ -40,6 +50,8 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 動画アプリやブラウザーの「共有」で **Android movie Download** を選ぶと、URLを入力して「ダウンロードしますか？」と表示します。確認すると現在の保存形式・画質で保存を開始します。キャンセル後もURLは残るため、設定を変更して保存できます。共有されたリストは動画の選択画面へ進みます。
 
 共有確認の表示例：[ダーク](docs/images/share-dark.png) / [大きな文字・ライト](docs/images/share-light-large.png)。Android標準の共有先に登録していますが、送信元アプリ独自の共有メニューでの表示順は送信元に従います。
+
+YouTubeの共有先に見つからない場合は、上のアプリアイコン列を横にスクロールし、「その他」「もっと見る」などからアプリの一覧を確認してください。YouTube内の「コピー」などの操作欄へ、このアプリから項目を追加・固定することはできません。共有先を選べない場合も、URLをコピーし、このアプリの「貼り付け」から保存できます。
 
 初回はGitHub Releasesのarm64版APKを端末にダウンロードし、Androidの確認画面からインストールします。
 
@@ -52,6 +64,13 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 「詳細設定」では更新配信先をGitHubのURLで表示し、選択してコピーできます。変更画面もURLで入力できます。
 
 ## 開発・ビルド
+
+公開ソースから開発する場合は、以下の環境を使用します。
+
+- Flutter 3.47.5／Dart 3.13.4、Java 17、Android SDK 36
+- 配布ビルドにはNDK 28.2.13676358・CMake 3.22.1・Pythonも使用
+- 開発時のプロジェクト配置例：`D:\Codex\ytdlp_flutter`
+- 開発ツール配置例：`D:\Tools\YtDlpFlutter`
 
 ```powershell
 Set-Location D:\Codex\ytdlp_flutter
