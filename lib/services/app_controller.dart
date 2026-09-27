@@ -22,6 +22,7 @@ class AppController extends ChangeNotifier {
   );
   String? sharedUrl;
   int sharedUrlRevision = 0;
+  String? _lastShareId;
   String? error;
   bool busy = false;
   bool ready = false;
@@ -39,8 +40,7 @@ class AppController extends ChangeNotifier {
       _subscription = bridge.events.listen(
         (event) {
           if (event['type'] == 'share') {
-            sharedUrl = event['url'] as String?;
-            sharedUrlRevision++;
+            _applyShare(event['sharedUrl'] ?? event['url'], event['shareId']);
             notifyListeners();
           } else {
             _applyState(event);
@@ -73,12 +73,28 @@ class AppController extends ChangeNotifier {
     appVersion = state['appVersion'] as String? ?? appVersion;
     versionCode = state['versionCode'] as int? ?? versionCode;
     hasCookies = state['hasCookies'] as bool? ?? hasCookies;
-    final incoming = state['sharedUrl'] as String?;
-    if (incoming != null && incoming.isNotEmpty && incoming != sharedUrl) {
-      sharedUrl = incoming;
-      sharedUrlRevision++;
-    }
+    _applyShare(state['sharedUrl'], state['shareId']);
     notifyListeners();
+  }
+
+  void _applyShare(dynamic text, dynamic id) {
+    if (text is! String || text.trim().isEmpty) return;
+    if (id is String) {
+      if (id == _lastShareId) return;
+      _lastShareId = id;
+    } else if (text == sharedUrl) {
+      return;
+    }
+    sharedUrl = text;
+    sharedUrlRevision++;
+  }
+
+  Future<void> consumeShare(int revision) async {
+    if (revision != sharedUrlRevision) return;
+    final id = _lastShareId;
+    sharedUrl = null;
+    notifyListeners();
+    if (id != null) await bridge.call('consumeShare', {'shareId': id});
   }
 
   Future<void> refresh() async => _applyState(await bridge.state());

@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/home_screen.dart';
 import 'services/app_controller.dart';
+import 'services/app_navigation.dart';
 import 'services/native_bridge.dart';
 
 void main() {
@@ -140,6 +141,7 @@ class DownloadApp extends StatelessWidget {
       theme: _theme(Brightness.light),
       darkTheme: _theme(Brightness.dark),
       themeMode: controller.themeMode,
+      navigatorObservers: [appRouteObserver],
       home: HomeScreen(controller: controller),
     ),
   );

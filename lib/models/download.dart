@@ -36,7 +36,9 @@ String normalizeVideoUrl(String text) {
     r'https?://[^\s<>]+',
     caseSensitive: false,
   ).firstMatch(trimmed);
-  final value = RegExp(r'^https?://', caseSensitive: false).hasMatch(trimmed)
+  final value =
+      !RegExp(r'\s').hasMatch(trimmed) &&
+          RegExp(r'^https?://', caseSensitive: false).hasMatch(trimmed)
       ? trimmed
       : (match?.group(0) ?? trimmed).replaceFirst(RegExp(r'[)\]。、]+$'), '');
   final uri = Uri.tryParse(value);

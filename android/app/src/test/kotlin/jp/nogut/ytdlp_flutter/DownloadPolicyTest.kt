@@ -6,6 +6,12 @@ import org.junit.Test
 import org.json.JSONObject
 
 class DownloadPolicyTest {
+    @Test fun acceptsShortsWithoutChangingSharedParameters() {
+        val url = "https://youtube.com/shorts/-WcGAdKTQGo?si=W9Kfp7wGwafNow9f"
+        val options = mapOf("url" to url, "mode" to "video", "height" to 2160,
+            "fps" to 60, "bitrate" to 320, "container" to "mp4")
+        assertEquals(url, DownloadPolicy.validate(options)["url"])
+    }
     @Test fun capsResolutionAndFramerateIncludingPortrait() {
         val info = JSONObject("""{"formats":[
             {"format_id":"8k","vcodec":"av1","acodec":"none","width":7680,"height":4320,"fps":60},

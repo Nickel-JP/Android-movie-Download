@@ -37,4 +37,10 @@ void main() {
       expect(() => normalizeVideoUrl(value), throwsFormatException);
     }
   });
+  test('ShortsのURL・先頭がハイフンの動画ID・共有クエリを保持する', () {
+    const url = 'https://youtube.com/shorts/-WcGAdKTQGo?si=W9Kfp7wGwafNow9f';
+    for (final text in [url, 'ショート動画\n$url', '$url\nおすすめのショート動画です']) {
+      expect(normalizeVideoUrl(text), url);
+    }
+  });
 }

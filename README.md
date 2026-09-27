@@ -4,7 +4,8 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 
 ## 機能
 
-- URL入力・Android共有メニューからの取り込み
+- URL入力・Android共有先からの取り込みと「ダウンロードしますか？」の確認
+- YouTube ShortsのURLと共有パラメーターに対応
 - プレイリスト・ミックスの一覧表示、左チェックボックス、全選択・全解除・個別選択と解除
 - サイトを限定せず、HTTP／HTTPSのURLをyt-dlpで解析。直接の動画・音声URLにも対応
 - 配信品質の範囲内で、最大4K／60fpsの動画をMP4またはMKVで保存
@@ -36,6 +37,10 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 
 ## インストールと更新
 
+動画アプリやブラウザーの「共有」で **Android movie Download** を選ぶと、URLを入力して「ダウンロードしますか？」と表示します。確認すると現在の保存形式・画質で保存を開始します。キャンセル後もURLは残るため、設定を変更して保存できます。共有されたリストは動画の選択画面へ進みます。
+
+共有確認の表示例：[ダーク](docs/images/share-dark.png) / [大きな文字・ライト](docs/images/share-light-large.png)。Android標準の共有先に登録していますが、送信元アプリ独自の共有メニューでの表示順は送信元に従います。
+
 初回はGitHub Releasesのarm64版APKを端末にダウンロードし、Androidの確認画面からインストールします。
 
 以降はアプリの「設定」→「アップデートを確認」から更新できます。変更内容の確認後に更新ファイルを取得し、検証後にAndroidのインストール確認画面を開きます。初回の更新時は、このアプリからのインストール許可が必要です。同じ署名の新しいバージョンで上書きするため、設定と履歴は保持されます。
@@ -58,7 +63,7 @@ flutter build apk --debug --target-platform android-x64
 署名済み配布版の作成：
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 1.0.3 -BuildNumber 4
+.\scripts\Build-Release.ps1 -Version 1.0.4 -BuildNumber 5
 ```
 
 `dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。
@@ -66,7 +71,7 @@ flutter build apk --debug --target-platform android-x64
 次のバージョンでは `Version` と `BuildNumber` を増やし、同じ署名設定でビルドしてください。`docs/release-notes/v<Version>.md` に変更内容、互換性、検証結果を記載し、APKと更新情報を同じGitHub Releaseに添付します。
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 1.0.3
+.\scripts\Publish-Release.ps1 -Version 1.0.4
 ```
 
 更新情報のバージョン・容量・ハッシュは実際のAPKと照合します。APKの署名・パッケージ名・バージョンはインストール前にも確認します。

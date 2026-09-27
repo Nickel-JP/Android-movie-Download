@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import '../models/download.dart';
 import '../models/media_list.dart';
 import '../services/app_controller.dart';
+import '../services/app_navigation.dart';
 import '../services/app_updater.dart';
 import 'playlist_screen.dart';
+import 'share_download_dialog.dart';
 import 'update_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,7 +16,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver, RouteAware {
   final _url = TextEditingController();
   int _page = 0;
   SaveMode _mode = SaveMode.video;
@@ -26,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   double? _updateProgress;
   String? _updateMessage;
   int _lastShareRevision = -1;
+  bool _shareScheduled = false;
+  bool _shareDialogOpen = false;
   String _historyFilter = 'all';
   Map<String, dynamic>? _info;
   late final AppUpdater _updater = AppUpdater(widget.controller.bridge);
@@ -45,16 +50,76 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _receiveShare() {
-    if (controller.sharedUrl != null &&
-        controller.sharedUrlRevision != _lastShareRevision) {
-      _lastShareRevision = controller.sharedUrlRevision;
-      _url.text = controller.sharedUrl!;
-      if (mounted) {
-        setState(() {
-          _page = 0;
-          _info = null;
-        });
+    if (!mounted ||
+        _shareScheduled ||
+        _shareDialogOpen ||
+        !controller.ready ||
+        controller.busy ||
+        _updating ||
+        controller.sharedUrl == null ||
+        controller.sharedUrlRevision == _lastShareRevision) {
+      return;
+    }
+    _shareScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _shareScheduled = false;
+      if (mounted) _confirmSharedDownload();
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null) appRouteObserver.subscribe(this, route);
+  }
+
+  @override
+  void didPopNext() => _receiveShare();
+
+  Future<void> _confirmSharedDownload() async {
+    if (_shareDialogOpen ||
+        !controller.ready ||
+        controller.busy ||
+        _updating ||
+        ModalRoute.of(context)?.isCurrent != true ||
+        controller.sharedUrl == null ||
+        controller.sharedUrlRevision == _lastShareRevision) {
+      return;
+    }
+    _shareDialogOpen = true;
+    final revision = controller.sharedUrlRevision;
+    _lastShareRevision = revision;
+    final text = controller.sharedUrl!;
+    try {
+      final url = normalizeVideoUrl(text);
+      final options = _options;
+      _url.text = url;
+      setState(() {
+        _page = 0;
+        _info = null;
+      });
+      FocusManager.instance.primaryFocus?.unfocus();
+      final approved = await showDialog<bool>(
+        context: context,
+        builder: (_) => ShareDownloadDialog(url: url, options: options),
+      );
+      if (!mounted || revision != controller.sharedUrlRevision) return;
+      await controller.consumeShare(revision);
+      if (approved == true && mounted) {
+        await _download(url: url, options: options);
       }
+    } catch (e) {
+      if (mounted) {
+        _toast(AppController.readableError(e));
+        if (controller.sharedUrl != null) {
+          await controller.run(() => controller.consumeShare(revision));
+        }
+      }
+    } finally {
+      _shareDialogOpen = false;
+      if (mounted) _receiveShare();
     }
   }
 
@@ -72,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _url.removeListener(_inputChanged);
     _url.dispose();
     _updater.close();
+    appRouteObserver.unsubscribe(this);
     super.dispose();
   }
 
@@ -132,12 +198,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _download() async {
+  Future<void> _download({String? url, DownloadOptions? options}) async {
     FocusManager.instance.primaryFocus?.unfocus();
     String? sourceUrl;
     MediaListPage? inspected;
     await controller.run(() async {
-      sourceUrl = normalizeVideoUrl(_url.text);
+      sourceUrl = normalizeVideoUrl(url ?? _url.text);
       if (_info == null) {
         inspected = await controller.inspectCollection(sourceUrl!);
       }
@@ -147,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await _openList(sourceUrl!, inspected!);
       return;
     }
-    await controller.download(sourceUrl!, _options);
+    await controller.download(sourceUrl!, options ?? _options);
     if (mounted && controller.error == null) {
       setState(() => _page = 1);
       _toast('ダウンロードを追加しました');
@@ -206,6 +272,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           _updating = false;
           _updateProgress = null;
         });
+        _receiveShare();
       }
     }
   }

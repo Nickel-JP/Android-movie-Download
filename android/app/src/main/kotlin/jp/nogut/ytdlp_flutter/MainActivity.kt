@@ -23,7 +23,7 @@ class MainActivity : FlutterActivity() {
     private val main = Handler(Looper.getMainLooper())
     private var eventSink: EventChannel.EventSink? = null
     private var cookieResult: MethodChannel.Result? = null
-    private var sharedUrl: String? = null
+    private val shareInbox = ShareInbox()
     private var pendingUpdate: Pair<String, Int>? = null
     private lateinit var store: TaskStore
     private lateinit var engine: NativeEngine
@@ -50,7 +50,7 @@ class MainActivity : FlutterActivity() {
         val info = packageManager.getPackageInfo(packageName, 0)
         return mapOf("tasks" to store.all(), "engineVersion" to engine.version,
             "appVersion" to info.versionName, "versionCode" to info.longVersionCode.toInt(),
-            "hasCookies" to engine.cookieFile.isFile, "sharedUrl" to sharedUrl)
+            "hasCookies" to engine.cookieFile.isFile) + shareInbox.snapshot()
     }
     private fun background(result: MethodChannel.Result, action: () -> Any?) {
         worker.submit {
@@ -68,9 +68,15 @@ class MainActivity : FlutterActivity() {
         try {
             when (call.method) {
                 "state" -> {
-                    val snapshot = state()
-                    sharedUrl = null
-                    result.success(snapshot)
+                    result.success(state())
+                }
+                "consumeShare" -> {
+                    val id = call.argument<String>("shareId") ?: error("共有情報がありません。")
+                    if (shareInbox.consume(id)) {
+                        intent?.removeExtra(Intent.EXTRA_TEXT)
+                        intent?.clipData = null
+                    }
+                    result.success(null)
                 }
                 "initialize" -> background(result) { engine.initialize(); engine.version }
                 "inspectCollection" -> background(result) {
@@ -212,12 +218,15 @@ class MainActivity : FlutterActivity() {
         }
     }
     private fun readShare(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-            sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT)
-            eventSink?.success(mapOf("type" to "share", "url" to sharedUrl))
+        if (shareInbox.receive(intent)) {
+            eventSink?.success(mapOf("type" to "share") + shareInbox.snapshot())
         }
     }
-    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); readShare(intent) }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        readShare(intent)
+    }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode != COOKIE_REQUEST) return
