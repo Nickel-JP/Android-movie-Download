@@ -1,0 +1,6 @@
+<lint>
+    <!-- Flutterが自動生成するローカルSDKパスだけを除外する。アプリのコードは通常どおり検証する。 -->
+    <issue id="PropertyEscape">
+        <ignore path="**/local.properties" />
+    </issue>
+</lint>

@@ -1,0 +1,81 @@
+# Android movie Download
+
+Flutterで作成した、YouTube・ニコニコ動画のAndroid向けダウンローダーです。
+
+## 機能
+
+- URL入力・Android共有メニューからの取り込み
+- 配信品質の範囲内で、最大4K／60fpsの動画をMP4またはMKVで保存
+- MP3は128／192／256／320kbps、WAVは非圧縮PCMで保存
+- 進捗通知、バックグラウンド処理、キャンセル、再試行、履歴
+- 保存先は `Download/Android movie Download`
+- 画面下に固定した開始ボタン、履歴の絞り込み、ライト・ダーク表示
+- Netscape形式のCookieファイル取り込み
+- アプリ内からyt-dlpを更新
+- GitHub Releasesからアプリ更新を確認し、Androidのインストール確認画面を開く
+
+4K／60fpsは元動画の配信品質が上限です。MP3 320kbpsやWAVへの変換で元音源以上の音質にはなりません。動画形式は再圧縮せずに変更するため、再生には保存されたコーデックに対応するプレーヤーが必要です。
+
+## 対応環境
+
+画面例：[ライト表示](docs/images/light.png) / [ダーク表示](docs/images/dark.png)。UI設計は [設計記録](docs/DESIGN.md) を参照してください。
+
+- Android 10以降、arm64端末向けの配布APK
+- ユーザー指定端末：A301SH・Android 15（実機は未接続）
+- Flutter 3.47.5／Dart 3.13.4、Java 17、Android SDK 36
+- 配布ビルドにはNDK 28.2.13676358・CMake 3.22.1・Pythonも使用
+- プロジェクト：`D:\Codex\ytdlp_flutter`
+- 開発ツール：`D:\Tools\YtDlpFlutter`
+
+現在配信中のライブ動画は対象外です。サイトのアクセス制限・ログイン状態・仕様変更によって取得できない場合は、エラーを表示します。
+
+## インストールと更新
+
+初回はGitHub Releasesのarm64版APKを端末にダウンロードし、Androidの確認画面からインストールします。
+
+以降はアプリの「設定・更新」→「アップデートを確認」から更新できます。変更内容の確認後に更新ファイルを取得し、検証後にAndroidのインストール確認画面を開きます。初回の更新時は、このアプリからのインストール許可が必要です。同じ署名の新しいバージョンで上書きするため、設定と履歴は保持されます。
+
+更新配信先は `Nickel-JP/Android-movie-Download` です。yt-dlpだけの更新にはアプリ本体の再インストールは不要です。
+
+## 開発・ビルド
+
+```powershell
+Set-Location D:\Codex\ytdlp_flutter
+. .\scripts\Use-Toolchain.ps1
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug --target-platform android-x64
+```
+
+署名済み配布版の作成：
+
+```powershell
+.\scripts\Build-Release.ps1 -Version 1.0.0 -BuildNumber 1
+```
+
+`dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。
+
+次のバージョンでは `Version` と `BuildNumber` を増やし、同じ署名設定でビルドしてください。`docs/release-notes/v<Version>.md` に変更内容、互換性、検証結果を記載し、APKと更新情報を同じGitHub Releaseに添付します。
+
+```powershell
+.\scripts\Publish-Release.ps1 -Version 1.0.1
+```
+
+更新情報のバージョン・容量・ハッシュは実際のAPKと照合します。APKの署名・パッケージ名・バージョンはインストール前にも確認します。
+
+## 構成
+
+- `lib/`：Flutter画面、状態管理、GitHub更新処理
+- `android/app/src/main/kotlin/`：yt-dlp連携、バックグラウンド処理、保存、インストール連携
+- `test/`：URL・更新情報・更新ファイル・画面操作のテスト
+- `android/app/src/test/`：画質・fps上限のテスト
+- `scripts/`：署名済みAPK、更新情報、GitHub Releaseの作成
+
+## 検証結果
+
+最新の結果と未検証事項は [検証記録](docs/VALIDATION.md) を参照してください。A301SH実機と16KBページサイズ環境での動作は未検証です。
+
+## ライセンス
+
+このプロジェクトはGPL-3.0で提供します。主要な依存ライブラリのライセンスはアプリ内と `assets/licenses/` に含めています。参照元は [第三者ライブラリ](docs/THIRD_PARTY.md) に記載しています。
