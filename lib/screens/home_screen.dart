@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/download.dart';
+import '../models/media_list.dart';
 import '../services/app_controller.dart';
 import '../services/app_updater.dart';
+import 'playlist_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.controller});
@@ -79,34 +81,72 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _inspect() => controller.run(() async {
-    final url = normalizeVideoUrl(_url.text);
-    final result = await controller.bridge.call<Map>('inspect', {'url': url});
+  DownloadOptions get _options => DownloadOptions(
+    mode: _mode,
+    height: _height,
+    fps: _fps,
+    bitrate: _bitrate,
+    container: _container,
+  );
+
+  Future<void> _openList(String url, MediaListPage page) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final count = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlaylistScreen(
+          controller: controller,
+          url: url,
+          initialPage: page,
+          options: _options,
+        ),
+      ),
+    );
+    if (count != null && mounted) {
+      setState(() => _page = 1);
+      _toast('$count件のダウンロードを追加しました');
+    }
+  }
+
+  Future<void> _inspect() async {
+    String? url;
+    MediaListPage? result;
+    await controller.run(() async {
+      url = normalizeVideoUrl(_url.text);
+      result = await controller.inspectCollection(url!);
+    });
+    if (result == null || url == null || !mounted) return;
     if (mounted) {
       try {
         if (normalizeVideoUrl(_url.text) == url) {
-          setState(() {
-            _info = Map<String, dynamic>.from(result ?? {});
-          });
+          if (result!.isList) {
+            await _openList(url!, result!);
+          } else {
+            setState(() => _info = result!.singleInfo);
+          }
         }
       } on FormatException {
         // 取得中に入力が変更された場合、古い動画情報を表示しない。
       }
     }
-  });
+  }
 
   Future<void> _download() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    await controller.download(
-      _url.text,
-      DownloadOptions(
-        mode: _mode,
-        height: _height,
-        fps: _fps,
-        bitrate: _bitrate,
-        container: _container,
-      ),
-    );
+    String? sourceUrl;
+    MediaListPage? inspected;
+    await controller.run(() async {
+      sourceUrl = normalizeVideoUrl(_url.text);
+      if (_info == null) {
+        inspected = await controller.inspectCollection(sourceUrl!);
+      }
+    });
+    if (controller.error != null || sourceUrl == null || !mounted) return;
+    if (inspected?.isList == true) {
+      await _openList(sourceUrl!, inspected!);
+      return;
+    }
+    await controller.download(sourceUrl!, _options);
     if (mounted && controller.error == null) {
       setState(() => _page = 1);
       _toast('ダウンロードを追加しました');
@@ -398,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         TextButton(
           onPressed: _canUse && _url.text.trim().isNotEmpty ? _inspect : null,
-          child: const Text('動画情報を確認'),
+          child: const Text('URL・リストを確認'),
         ),
       ],
     ),

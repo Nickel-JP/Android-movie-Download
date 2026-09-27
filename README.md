@@ -5,6 +5,7 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 ## 機能
 
 - URL入力・Android共有メニューからの取り込み
+- プレイリスト・ミックスの一覧表示、左チェックボックス、全選択・全解除・個別選択と解除
 - サイトを限定せず、HTTP／HTTPSのURLをyt-dlpで解析。直接の動画・音声URLにも対応
 - 配信品質の範囲内で、最大4K／60fpsの動画をMP4またはMKVで保存
 - MP3は128／192／256／320kbps、WAVは非圧縮PCMで保存
@@ -30,7 +31,7 @@ Flutterで作成した、yt-dlp対応サイトの動画・音声を保存するA
 
 対応サイトはアプリ内のyt-dlpの版に従います。[yt-dlpの対応サイト](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) を参照してください。取得可否はサイト側のアクセス制限・ログイン状態・仕様変更にも依存します。Cookieはサイトを限定せず取り込めます。
 
-現在配信中のライブ動画と、複数件をまとめて処理するプレイリストは対象外です。単体の動画・音声URLを指定してください。認証情報を直接埋め込んだURLや、HTTP／HTTPS以外のスキームは受け付けません。
+プレイリスト・ミックスURLは「URL・リストを確認」から一覧を開き、保存したい項目を選択できます。リストと待機中のキューは最大1000件です。現在配信中のライブ動画は対象外です。認証情報を直接埋め込んだURLや、HTTP／HTTPS以外のスキームは受け付けません。
 
 ## インストールと更新
 
@@ -54,7 +55,7 @@ flutter build apk --debug --target-platform android-x64
 署名済み配布版の作成：
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 1.0.1 -BuildNumber 2
+.\scripts\Build-Release.ps1 -Version 1.0.2 -BuildNumber 3
 ```
 
 `dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。
@@ -62,7 +63,7 @@ flutter build apk --debug --target-platform android-x64
 次のバージョンでは `Version` と `BuildNumber` を増やし、同じ署名設定でビルドしてください。`docs/release-notes/v<Version>.md` に変更内容、互換性、検証結果を記載し、APKと更新情報を同じGitHub Releaseに添付します。
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 1.0.1
+.\scripts\Publish-Release.ps1 -Version 1.0.2
 ```
 
 更新情報のバージョン・容量・ハッシュは実際のAPKと照合します。APKの署名・パッケージ名・バージョンはインストール前にも確認します。

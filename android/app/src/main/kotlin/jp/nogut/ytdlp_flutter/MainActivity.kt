@@ -73,6 +73,21 @@ class MainActivity : FlutterActivity() {
                     result.success(snapshot)
                 }
                 "initialize" -> background(result) { engine.initialize(); engine.version }
+                "inspectCollection" -> background(result) {
+                    val url = call.argument<String>("url") ?: error("リストURLを指定してください。")
+                    DownloadPolicy.validate(mapOf("url" to url, "mode" to "video", "height" to 2160,
+                        "fps" to 60, "bitrate" to 320, "container" to "mp4"))
+                    engine.inspectCollection(url, call.argument<Int>("offset") ?: 0)
+                }
+                "enqueueMany" -> {
+                    val items = call.argument<List<Map<String, Any?>>>("items") ?: error("動画を選択してください。")
+                    val ids = store.addBatch(items)
+                    try { startDownloads() } catch (e: Exception) {
+                        ids.forEach { store.update(it, mapOf("status" to "failed", "message" to "保存処理を開始できません。")) }
+                        throw e
+                    }
+                    result.success(ids)
+                }
                 "inspect" -> background(result) {
                     val options = mapOf("url" to call.argument<String>("url"), "mode" to "video",
                         "height" to 2160, "fps" to 60, "bitrate" to 320, "container" to "mp4")

@@ -24,8 +24,8 @@ class NativeEngine private constructor(private val context: Application) {
             initialized = true
         }
     }
-    private fun common(url: String): List<String> = buildList {
-        addAll(listOf("--no-playlist", "--socket-timeout", "30", "--retries", "3", "--fragment-retries", "3"))
+    private fun common(url: String, playlist: Boolean = false): List<String> = buildList {
+        addAll(listOf(if (playlist) "--yes-playlist" else "--no-playlist", "--socket-timeout", "30", "--retries", "3", "--fragment-retries", "3"))
         if (cookieFile.isFile) addAll(listOf("--cookies", cookieFile.absolutePath))
         addAll(listOf("--", url))
     }
@@ -53,6 +53,20 @@ class NativeEngine private constructor(private val context: Application) {
         val quality = if (height > 0) "配信上限：${height}p" + if (fps > 0) " / ${fps.toInt()}fps" else ""
             else "画質情報は保存後に確認します"
         mapOf("title" to info.optString("title"), "quality" to quality)
+    }
+    fun inspectCollection(url: String, offset: Int): Map<String, Any?> = lock.withLock {
+        initialize()
+        require(offset in 0 until PlaylistPolicy.MAX_ENTRIES) { "リストの取得位置が不正です。" }
+        val end = minOf(offset + PlaylistPolicy.PAGE_SIZE + 1, PlaylistPolicy.MAX_ENTRIES + 1)
+        val output = runtime.execute(listOf("--dump-single-json", "--skip-download", "--flat-playlist",
+            "--playlist-items", "${offset + 1}:$end") + common(url, true))
+        val line = output.lineSequence().lastOrNull { it.startsWith('{') } ?: error("リスト情報を取得できません。")
+        val info = JSONObject(line)
+        if (info.optJSONArray("entries") == null) {
+            require(!info.optBoolean("is_live")) { "現在配信中のライブ動画には対応していません。" }
+            return@withLock mapOf("kind" to "single", "title" to info.optString("title"), "quality" to "単体の動画・音声です")
+        }
+        PlaylistPolicy.page(info, offset)
     }
     fun cancel(id: String) {
         val token = tokens[id] ?: return

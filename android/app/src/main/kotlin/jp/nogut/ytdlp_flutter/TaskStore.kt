@@ -28,18 +28,24 @@ class TaskStore private constructor(context: Context) {
         }
     }
     @Synchronized
-    fun add(options: Map<String, Any?>): String {
-        require(tasks.count { it.optString("status") in activeStates } < 20) { "待機中の上限は20件です。" }
-        val id = UUID.randomUUID().toString()
-        tasks.add(JSONObject(options).put("id", id).put("title", "動画情報を取得中")
-            .put("status", "queued").put("progress", 0.0).put("createdAt", System.currentTimeMillis()))
-        while (tasks.size > 200) {
-            val index = tasks.indexOfFirst { it.optString("status") !in activeStates }
-            if (index < 0) break
-            tasks.removeAt(index)
+    fun add(options: Map<String, Any?>): String = addBatch(listOf(options)).first()
+    @Synchronized
+    fun addBatch(options: List<Map<String, Any?>>): List<String> {
+        val active = tasks.count { it.optString("status") in activeStates }
+        require(options.isNotEmpty() && active + options.size <= PlaylistPolicy.MAX_ENTRIES) {
+            "待機中の上限は${PlaylistPolicy.MAX_ENTRIES}件です。現在の保存が終わってから追加してください。"
         }
+        // 件数と全項目の検証が済んでからまとめて登録し、途中までの追加を防ぐ。
+        val prepared = options.map { data ->
+            DownloadPolicy.validate(data)
+            JSONObject(data).put("id", UUID.randomUUID().toString())
+                .put("title", (data["title"] as? String)?.take(200)?.ifBlank { null } ?: "動画情報を取得中")
+                .put("status", "queued").put("progress", 0.0).put("createdAt", System.currentTimeMillis())
+        }
+        tasks.addAll(prepared)
+        trimHistory()
         publish()
-        return id
+        return prepared.map { it.getString("id") }
     }
     @Synchronized
     fun get(id: String): JSONObject? = tasks.find { it.optString("id") == id }?.let { JSONObject(it.toString()) }
@@ -53,6 +59,7 @@ class TaskStore private constructor(context: Context) {
     fun update(id: String, changes: Map<String, Any?>) {
         val task = tasks.find { it.optString("id") == id } ?: return
         changes.forEach { (key, value) -> task.put(key, value ?: JSONObject.NULL) }
+        trimHistory()
         publish()
     }
     @Synchronized
@@ -65,6 +72,13 @@ class TaskStore private constructor(context: Context) {
     private fun publish() {
         prefs.edit().putString("tasks", JSONArray(tasks).toString()).apply()
         main.post { listener?.invoke() }
+    }
+    private fun trimHistory() {
+        while (tasks.count { it.optString("status") !in activeStates } > 200) {
+            val index = tasks.indexOfFirst { it.optString("status") !in activeStates }
+            if (index < 0) break
+            tasks.removeAt(index)
+        }
     }
     companion object {
         val activeStates = setOf("queued", "running", "processing", "saving")

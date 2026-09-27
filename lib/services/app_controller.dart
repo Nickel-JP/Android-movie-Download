@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/download.dart';
+import '../models/media_list.dart';
 import 'native_bridge.dart';
 
 class AppController extends ChangeNotifier {
@@ -98,6 +99,25 @@ class AppController extends ChangeNotifier {
 
   Future<void> download(String url, DownloadOptions options) => run(() async {
     await bridge.call('enqueue', options.toMap(url));
+    await refresh();
+  });
+  Future<MediaListPage> inspectCollection(String url, {int offset = 0}) async {
+    final data = await bridge.call<Map>('inspectCollection', {
+      'url': normalizeVideoUrl(url),
+      'offset': offset,
+    });
+    return MediaListPage(Map<String, dynamic>.from(data ?? {}));
+  }
+
+  Future<void> downloadMany(
+    List<MediaListEntry> entries,
+    DownloadOptions options,
+  ) => run(() async {
+    if (entries.isEmpty) throw const FormatException('保存する動画を選択してください。');
+    final items = entries
+        .map((entry) => {...options.toMap(entry.url), 'title': entry.title})
+        .toList();
+    await bridge.call('enqueueMany', {'items': items});
     await refresh();
   });
   Future<void> cancel(String id) => run(() async {
