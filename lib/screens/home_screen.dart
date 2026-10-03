@@ -902,6 +902,14 @@ class _HomeScreenState extends State<HomeScreen>
                     child: Wrap(
                       spacing: 8,
                       children: [
+                        if ((task.status == 'failed' ||
+                                task.status == 'interrupted') &&
+                            task.message.isNotEmpty)
+                          TextButton.icon(
+                            onPressed: () => _showErrorDetails(task),
+                            icon: const Icon(Icons.info_outline, size: 17),
+                            label: const Text('エラー詳細'),
+                          ),
                         if (task.active)
                           TextButton(
                             onPressed: controller.busy
@@ -937,6 +945,61 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     ];
+  }
+
+  Future<void> _showErrorDetails(DownloadTask task) async {
+    var copied = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('エラー詳細'),
+          scrollable: true,
+          constraints: const BoxConstraints(maxWidth: 560),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                SelectableText(
+                  task.message,
+                  key: const Key('errorDetailsText'),
+                  style: const TextStyle(fontSize: 13, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () async {
+                try {
+                  await Clipboard.setData(ClipboardData(text: task.message));
+                  if (dialogContext.mounted) {
+                    setDialogState(() => copied = true);
+                  }
+                } catch (e) {
+                  _toast(AppController.readableError(e));
+                }
+              },
+              icon: Icon(copied ? Icons.check : Icons.copy_outlined, size: 17),
+              label: Text(copied ? 'コピーしました' : 'コピー'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('閉じる'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> _settingsPage() {

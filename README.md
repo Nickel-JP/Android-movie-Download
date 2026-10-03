@@ -26,6 +26,7 @@ GitHubアカウントへの登録・ログインや、開発環境の用意は�
 - 配信品質の範囲内で、最大4K／60fpsの動画をMP4またはMKVで保存
 - MP3は128／192／256／320kbps、WAVは非圧縮PCMで保存
 - 進捗通知、バックグラウンド処理、キャンセル、再試行、履歴
+- 失敗・中断した履歴のエラー全文表示とコピー
 - 保存先は `Download/Android movie Download`
 - 画面下に固定した開始ボタン、履歴の絞り込み、ライト・ダーク表示
 - Netscape形式のCookieファイル取り込み
@@ -84,7 +85,7 @@ flutter build apk --debug --target-platform android-x64
 署名済み配布版の作成：
 
 ```powershell
-.\scripts\Build-Release.ps1 -Version 1.0.5 -BuildNumber 6
+.\scripts\Build-Release.ps1 -Version 1.0.6 -BuildNumber 7
 ```
 
 `dist/` にAPKと `update.json` を生成します。ローカルの `android/key.properties` が必要です。署名設定とキーはGitの管理対象から除外しています。
@@ -92,7 +93,7 @@ flutter build apk --debug --target-platform android-x64
 次のバージョンでは `Version` と `BuildNumber` を増やし、同じ署名設定でビルドしてください。`docs/release-notes/v<Version>.md` に変更内容、互換性、検証結果を記載し、APKと更新情報を同じGitHub Releaseに添付します。
 
 ```powershell
-.\scripts\Publish-Release.ps1 -Version 1.0.5
+.\scripts\Publish-Release.ps1 -Version 1.0.6
 ```
 
 更新情報のバージョン・容量・ハッシュは実際のAPKと照合します。APKの署名・パッケージ名・バージョンはインストール前にも確認します。

@@ -76,7 +76,7 @@ class NativeRuntime(private val context: Context) {
             "--js-runtimes", "quickjs:${File(nativeDir, "libqjs.so").absolutePath}",
             "--ffmpeg-location", File(nativeDir, "libffmpeg.so").absolutePath)
         command.addAll(args)
-        return run(command, token, onLine)
+        return run(command, token, onLine = onLine)
     }
 
     fun executeFfmpeg(args: List<String>, token: CancelToken = CancelToken()): String {
@@ -87,7 +87,21 @@ class NativeRuntime(private val context: Context) {
         return run(command, token) {}
     }
 
-    private fun run(command: List<String>, token: CancelToken, onLine: (String) -> Unit): String {
+    fun executeFfprobe(args: List<String>, token: CancelToken = CancelToken()): String {
+        val command = mutableListOf("/system/bin/sh", "-c",
+            "echo __ANDROID_MOVIE_PID__\$\$; exec \"\$@\"", "ffprobe-runner",
+            File(nativeDir, "libffprobe.so").absolutePath)
+        command.addAll(args)
+        try {
+            return run(command, token, "動画情報の確認に失敗しました") {}
+        } catch (e: java.io.IOException) {
+            token.check()
+            throw IllegalStateException("動画情報の確認中に入出力エラーが発生しました。${e.message.orEmpty()}", e)
+        }
+    }
+
+    private fun run(command: List<String>, token: CancelToken,
+        failureContext: String? = null, onLine: (String) -> Unit): String {
         token.check()
         val builder = ProcessBuilder(command).redirectErrorStream(true)
         builder.environment().apply {
@@ -117,8 +131,11 @@ class NativeRuntime(private val context: Context) {
             }
             val exitCode = process.waitFor()
             token.check()
-            if (exitCode != 0) error(output.toString().takeLast(2500)
-                .replace(Regex("https?://[^\\s]+"), "[URL]").ifBlank { "ダウンロードに失敗しました（$exitCode）。" })
+            if (exitCode != 0) {
+                val detail = output.toString().takeLast(2500).replace(Regex("https?://[^\\s]+"), "[URL]")
+                error(if (failureContext == null) detail.ifBlank { "ダウンロードに失敗しました（$exitCode）。" }
+                    else "$failureContext（終了コード $exitCode）。\n$detail".trimEnd())
+            }
             return output.toString()
         } catch (e: java.io.IOException) {
             // プロセス終了によるストリーム切断も、ユーザーが指示したキャンセルとして扱う。

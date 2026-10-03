@@ -52,6 +52,14 @@ class TaskStore private constructor(context: Context) {
     @Synchronized
     fun next(): JSONObject? = tasks.find { it.optString("status") == "queued" }?.let { JSONObject(it.toString()) }
     @Synchronized
+    fun claimNext(): JSONObject? {
+        // キャンセル済みの項目を、取得と開始の隙間で実行中へ戻さない。
+        val task = tasks.firstOrNull { it.optString("status") == "queued" } ?: return null
+        task.put("status", "running")
+        publish()
+        return JSONObject(task.toString())
+    }
+    @Synchronized
     fun hasActive(): Boolean = tasks.any { it.optString("status") in activeStates }
     @Synchronized
     fun all(): List<Map<String, Any?>> = tasks.map { jsonToMap(it) }
@@ -63,9 +71,9 @@ class TaskStore private constructor(context: Context) {
         publish()
     }
     @Synchronized
-    fun interruptQueued() {
+    fun interruptQueued(message: String = "Androidの実行制限に達しました。アプリを開いて再試行してください。") {
         tasks.filter { it.optString("status") == "queued" }.forEach {
-            it.put("status", "interrupted").put("message", "Androidの実行制限に達しました。アプリを開いて再試行してください。")
+            it.put("status", "interrupted").put("message", message)
         }
         publish()
     }

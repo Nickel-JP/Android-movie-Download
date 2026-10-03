@@ -16,7 +16,7 @@ class CookieAndProbeTest {
         }
     }
     @Test fun parsesVideoDimensionsAndFrameRate() {
-        val result = VideoProbe.parse("Stream #0:0: Video: h264 (High), yuv420p, 3840x2160 [SAR 1:1 DAR 16:9], 59.94 fps, 60 tbr")
+        val result = VideoProbe.parse("""{"streams":[{"width":3840,"height":2160,"avg_frame_rate":"60000/1001","r_frame_rate":"60/1"}]}""")
         assertEquals(3840, result.width)
         assertEquals(2160, result.height)
         assertEquals(59.94, result.fps!!, 0.001)
